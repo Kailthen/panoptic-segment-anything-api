@@ -522,22 +522,20 @@ if __name__ == "__main__":
                         )
 
                 with gr.Column():
-                    annotated_image = gr.AnnotatedImage()
-                    with gr.Accordion("Segmentation bitmap", open=False):
-                        segmentation_bitmap_text = gr.Markdown(
-                            """
+                    segmentation_bitmap_text = gr.Markdown(
+                        """
 The segmentation bitmap is a 32-bit RGBA png image which contains the segmentation masks.
 The alpha channel is set to 255, and the remaining 24-bit values in the RGB channels correspond to the object ids in the annotations list.
 Unlabeled regions have a value of 0.
 Because of the large dynamic range, these png images may appear black in an image viewer.
 """
-                        )
-                        segmentation_bitmap = gr.Image(
-                            type="filepath", label="Segmentation bitmap"
-                        )
-                        annotations_json = gr.Textbox(
-                            label="Annotations JSON",
-                        )
+                    )
+                    segmentation_bitmap = gr.Image(
+                        type="filepath", label="Segmentation bitmap"
+                    )
+                    annotations_json = gr.Textbox(
+                        label="Annotations JSON",
+                    )
 
             examples = gr.Examples(
                 examples=[
@@ -558,7 +556,7 @@ Because of the large dynamic range, these png images may appear black in an imag
                     thing_category_names_string,
                     stuff_category_names_string,
                 ],
-                outputs=[annotated_image, segmentation_bitmap, annotations_json],
+                outputs=[segmentation_bitmap, annotations_json],
                 cache_examples=True,
             )
 
@@ -575,7 +573,7 @@ Because of the large dynamic range, these png images may appear black in an imag
                 num_samples_factor,
                 task_attributes_json,
             ],
-            outputs=[annotated_image, segmentation_bitmap, annotations_json],
+            outputs=[segmentation_bitmap, annotations_json],
             api_name="segment",
         )
 
