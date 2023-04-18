@@ -391,21 +391,6 @@ def generate_panoptic_mask(
         panoptic_inds[thing_mask.squeeze()] = ind
         ind += 1
 
-    panoptic_bool_masks = (
-        semantic_inds_to_shrunken_bool_masks(panoptic_inds, 0, ind + 1)
-        .numpy()
-        .astype(int)
-    )
-    panoptic_names = (
-        ["background"]
-        + stuff_category_names
-        + [category_names[category_id] for category_id in thing_category_ids]
-    )
-    subsection_label_pairs = [
-        (panoptic_bool_masks[i], panoptic_name)
-        for i, panoptic_name in enumerate(panoptic_names)
-    ]
-
     stuff_category_ids = [category_name_to_id[name] for name in stuff_category_names]
     segmentation_bitmap, annotations = inds_to_segments_format(
         panoptic_inds, thing_category_ids, stuff_category_ids
