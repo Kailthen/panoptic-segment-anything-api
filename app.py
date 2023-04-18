@@ -263,9 +263,11 @@ def inds_to_segments_format(panoptic_inds, thing_category_ids, stuff_category_na
     bitmap_file = bitmap2file(panoptic_inds_array, is_segmentation_bitmap=True)
     segmentation_bitmap = Image.open(bitmap_file)
 
+    stuff_category_ids = [i + 1 for i in range(len(stuff_category_names))]
+
     unique_inds = np.unique(panoptic_inds_array)
     stuff_annotations = [
-        {"id": i, "category_id": stuff_category_names[i - 1]}
+        {"id": i, "category_id": stuff_category_ids[i - 1]}
         for i in range(1, len(stuff_category_names) + 1)
         if i in unique_inds
     ]
