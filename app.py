@@ -265,7 +265,7 @@ def sam_mask_from_points(predictor, image_array, points):
 def inds_to_segments_format(panoptic_inds, thing_category_ids, stuff_category_ids):
     panoptic_inds_array = panoptic_inds.numpy().astype(np.uint32)
     bitmap_file = bitmap2file(panoptic_inds_array, is_segmentation_bitmap=True)
-    segmentation_bitmap = Image.open(io.BytesIO(bitmap_file))
+    segmentation_bitmap = Image.open(bitmap_file)
 
     unique_inds = np.unique(panoptic_inds_array)
     stuff_annotations = [
@@ -293,7 +293,7 @@ def generate_panoptic_mask(
     num_samples_factor=1000,
     task_attributes_json="",
 ):
-    if task_attributes_json is not "":
+    if task_attributes_json != "":
         task_attributes = json.loads(task_attributes_json)
         categories = task_attributes["categories"]
         category_name_to_id = {
