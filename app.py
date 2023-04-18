@@ -258,19 +258,19 @@ def sam_mask_from_points(predictor, image_array, points):
     return upsampled_pred
 
 
-def inds_to_segments_format(panoptic_inds, thing_category_ids, stuff_category_ids):
+def inds_to_segments_format(panoptic_inds, thing_category_ids, stuff_category_names):
     panoptic_inds_array = panoptic_inds.numpy().astype(np.uint32)
     bitmap_file = bitmap2file(panoptic_inds_array, is_segmentation_bitmap=True)
     segmentation_bitmap = Image.open(bitmap_file)
 
     unique_inds = np.unique(panoptic_inds_array)
     stuff_annotations = [
-        {"id": i + 1, "category_id": stuff_category_id}
-        for i, stuff_category_id in enumerate(stuff_category_ids)
+        {"id": i, "category_id": stuff_category_names[i - 1]}
+        for i in range(1, len(stuff_category_names) + 1)
         if i in unique_inds
     ]
     thing_annotations = [
-        {"id": len(stuff_category_ids) + 1 + i, "category_id": thing_category_id}
+        {"id": len(stuff_category_names) + 1 + i, "category_id": thing_category_id}
         for i, thing_category_id in enumerate(thing_category_ids)
     ]
     annotations = stuff_annotations + thing_annotations
@@ -391,9 +391,8 @@ def generate_panoptic_mask(
         panoptic_inds[thing_mask.squeeze()] = ind
         ind += 1
 
-    stuff_category_ids = [category_name_to_id[name] for name in stuff_category_names]
     segmentation_bitmap, annotations = inds_to_segments_format(
-        panoptic_inds, thing_category_ids, stuff_category_ids
+        panoptic_inds, thing_category_ids, stuff_category_names
     )
     annotations_json = json.dumps(annotations)
 
