@@ -23,6 +23,7 @@ import argparse
 import random
 import warnings
 import json
+import io
 
 import gradio as gr
 import numpy as np
@@ -261,13 +262,10 @@ def sam_mask_from_points(predictor, image_array, points):
     return upsampled_pred
 
 
-def inds_to_segments_format(
-    panoptic_inds, thing_category_ids, stuff_category_ids, output_file_path
-):
+def inds_to_segments_format(panoptic_inds, thing_category_ids, stuff_category_ids):
     panoptic_inds_array = panoptic_inds.numpy().astype(np.uint32)
     bitmap_file = bitmap2file(panoptic_inds_array, is_segmentation_bitmap=True)
-    with open(output_file_path, "wb") as output_file:
-        output_file.write(bitmap_file.read())
+    segmentation_bitmap = Image.open(io.BytesIO(bitmap_file))
 
     unique_inds = np.unique(panoptic_inds_array)
     stuff_annotations = [
@@ -281,7 +279,7 @@ def inds_to_segments_format(
     ]
     annotations = stuff_annotations + thing_annotations
 
-    return annotations
+    return segmentation_bitmap, annotations
 
 
 def generate_panoptic_mask(
@@ -412,14 +410,13 @@ def generate_panoptic_mask(
         for i, panoptic_name in enumerate(panoptic_names)
     ]
 
-    output_file_path = "output_segmentation_bitmap.png"
     stuff_category_ids = [category_name_to_id[name] for name in stuff_category_names]
-    annotations = inds_to_segments_format(
-        panoptic_inds, thing_category_ids, stuff_category_ids, output_file_path
+    segmentation_bitmap, annotations = inds_to_segments_format(
+        panoptic_inds, thing_category_ids, stuff_category_ids
     )
     annotations_json = json.dumps(annotations)
 
-    return output_file_path, annotations_json
+    return segmentation_bitmap, annotations_json
 
 
 config_file = "GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
@@ -531,7 +528,7 @@ Because of the large dynamic range, these png images may appear black in an imag
 """
                     )
                     segmentation_bitmap = gr.Image(
-                        type="filepath", label="Segmentation bitmap"
+                        type="pil", label="Segmentation bitmap"
                     )
                     annotations_json = gr.Textbox(
                         label="Annotations JSON",
