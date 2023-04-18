@@ -448,129 +448,68 @@ clipseg_model = CLIPSegForImageSegmentation.from_pretrained(
 )
 clipseg_model.to(device)
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Panoptic Segment Anything demo", add_help=True)
-    parser.add_argument("--debug", action="store_true", help="using debug mode")
-    parser.add_argument("--share", action="store_true", help="share the app")
-    args = parser.parse_args()
+inputs = [
+    gr.Image(source="upload", type="pil"),
+    gr.Textbox(
+        label="Thing categories (i.e. categories with instances), comma-separated",
+        placeholder="E.g. car, bus, person",
+    ),
+    gr.Textbox(
+        label="Stuff categories (i.e. categories without instances), comma-separated",
+        placeholder="E.g. sky, road, buildings",
+    ),
+    gr.Slider(
+        label="Grounding DINO box threshold",
+        minimum=0.0,
+        maximum=1.0,
+        value=0.3,
+        step=0.001,
+    ),
+    gr.Slider(
+        label="Grounding DINO text threshold",
+        minimum=0.0,
+        maximum=1.0,
+        value=0.25,
+        step=0.001,
+    ),
+    gr.Slider(
+        label="Segmentation background threshold (under this threshold, a pixel is considered background)",
+        minimum=0.0,
+        maximum=1.0,
+        value=0.1,
+        step=0.001,
+    ),
+    gr.Slider(
+        label="Shrink kernel size (how much to shrink the mask before sampling points)",
+        minimum=0,
+        maximum=100,
+        value=20,
+        step=1,
+    ),
+    gr.Slider(
+        label="Number of samples factor (how many points to sample in the largest category)",
+        minimum=0,
+        maximum=1000,
+        value=1000,
+        step=1,
+    ),
+    gr.Textbox(
+        label="Task attributes JSON",
+    ),
+]
 
-    print(f"args = {args}")
+outputs = [
+    gr.Image(type="pil", label="Segmentation bitmap"),
+    gr.Textbox(
+        label="Annotations JSON",
+    ),
+]
+title = "Panoptic Segment Anything API"
 
-    block = gr.Blocks(title="Panoptic Segment Anything")
-    with block:
-        with gr.Column():
-            title = gr.Markdown(
-                "# [Panoptic Segment Anything](https://github.com/segments-ai/panoptic-segment-anything)"
-            )
-            description = gr.Markdown(
-                "Demo for zero-shot panoptic segmentation using Segment Anything, Grounding DINO, and CLIPSeg."
-            )
-            with gr.Row():
-                with gr.Column():
-                    input_image = gr.Image(source="upload", type="pil")
-                    thing_category_names_string = gr.Textbox(
-                        label="Thing categories (i.e. categories with instances), comma-separated",
-                        placeholder="E.g. car, bus, person",
-                    )
-                    stuff_category_names_string = gr.Textbox(
-                        label="Stuff categories (i.e. categories without instances), comma-separated",
-                        placeholder="E.g. sky, road, buildings",
-                    )
-                    run_button = gr.Button(label="Run")
-                    with gr.Accordion("Advanced options", open=False):
-                        box_threshold = gr.Slider(
-                            label="Grounding DINO box threshold",
-                            minimum=0.0,
-                            maximum=1.0,
-                            value=0.3,
-                            step=0.001,
-                        )
-                        text_threshold = gr.Slider(
-                            label="Grounding DINO text threshold",
-                            minimum=0.0,
-                            maximum=1.0,
-                            value=0.25,
-                            step=0.001,
-                        )
-                        segmentation_background_threshold = gr.Slider(
-                            label="Segmentation background threshold (under this threshold, a pixel is considered background)",
-                            minimum=0.0,
-                            maximum=1.0,
-                            value=0.1,
-                            step=0.001,
-                        )
-                        shrink_kernel_size = gr.Slider(
-                            label="Shrink kernel size (how much to shrink the mask before sampling points)",
-                            minimum=0,
-                            maximum=100,
-                            value=20,
-                            step=1,
-                        )
-                        num_samples_factor = gr.Slider(
-                            label="Number of samples factor (how many points to sample in the largest category)",
-                            minimum=0,
-                            maximum=1000,
-                            value=1000,
-                            step=1,
-                        )
-                        task_attributes_json = gr.Textbox(
-                            label="Task attributes JSON",
-                        )
-
-                with gr.Column():
-                    segmentation_bitmap_text = gr.Markdown(
-                        """
-The segmentation bitmap is a 32-bit RGBA png image which contains the segmentation masks.
-The alpha channel is set to 255, and the remaining 24-bit values in the RGB channels correspond to the object ids in the annotations list.
-Unlabeled regions have a value of 0.
-Because of the large dynamic range, these png images may appear black in an image viewer.
-"""
-                    )
-                    segmentation_bitmap = gr.Image(
-                        type="pil", label="Segmentation bitmap"
-                    )
-                    annotations_json = gr.Textbox(
-                        label="Annotations JSON",
-                    )
-
-            examples = gr.Examples(
-                examples=[
-                    [
-                        "a2d2.png",
-                        "car, bus, person",
-                        "road, sky, buildings, sidewalk",
-                    ],
-                    [
-                        "bxl.png",
-                        "car, tram, motorcycle, person",
-                        "road, buildings, sky",
-                    ],
-                ],
-                fn=generate_panoptic_mask,
-                inputs=[
-                    input_image,
-                    thing_category_names_string,
-                    stuff_category_names_string,
-                ],
-                outputs=[segmentation_bitmap, annotations_json],
-                cache_examples=True,
-            )
-
-        run_button.click(
-            fn=generate_panoptic_mask,
-            inputs=[
-                input_image,
-                thing_category_names_string,
-                stuff_category_names_string,
-                box_threshold,
-                text_threshold,
-                segmentation_background_threshold,
-                shrink_kernel_size,
-                num_samples_factor,
-                task_attributes_json,
-            ],
-            outputs=[segmentation_bitmap, annotations_json],
-            api_name="segment",
-        )
-
-    block.launch(server_name="0.0.0.0", debug=args.debug, share=args.share)
+demo_app = gr.Interface(
+    fn=generate_panoptic_mask,
+    inputs=inputs,
+    outputs=outputs,
+    title=title,
+)
+demo_app.launch(debug=True, enable_queue=True)
