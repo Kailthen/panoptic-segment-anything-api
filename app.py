@@ -419,7 +419,7 @@ def generate_panoptic_mask(
     )
     annotations_json = json.dumps(annotations)
 
-    return (image_array, subsection_label_pairs), output_file_path, annotations_json
+    return output_file_path, annotations_json
 
 
 config_file = "GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
