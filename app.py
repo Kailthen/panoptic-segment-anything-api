@@ -23,7 +23,6 @@ import argparse
 import random
 import warnings
 import json
-import io
 
 import gradio as gr
 import numpy as np
@@ -457,7 +456,7 @@ if __name__ == "__main__":
 
     print(f"args = {args}")
 
-    block = gr.Blocks(title="Panoptic Segment Anything").queue()
+    block = gr.Blocks(title="Panoptic Segment Anything")
     with block:
         with gr.Column():
             title = gr.Markdown(
