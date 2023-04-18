@@ -399,7 +399,7 @@ def generate_panoptic_mask(
         ind += 1
 
     segmentation_bitmap, annotations = inds_to_segments_format(
-        panoptic_inds, thing_category_ids, stuff_category_names
+        panoptic_inds, thing_category_ids, stuff_category_names, category_name_to_id
     )
     annotations_json = json.dumps(annotations)
 
