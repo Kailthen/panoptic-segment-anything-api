@@ -258,12 +258,17 @@ def sam_mask_from_points(predictor, image_array, points):
     return upsampled_pred
 
 
-def inds_to_segments_format(panoptic_inds, thing_category_ids, stuff_category_names):
+def inds_to_segments_format(
+    panoptic_inds, thing_category_ids, stuff_category_names, category_name_to_id
+):
     panoptic_inds_array = panoptic_inds.numpy().astype(np.uint32)
     bitmap_file = bitmap2file(panoptic_inds_array, is_segmentation_bitmap=True)
     segmentation_bitmap = Image.open(bitmap_file)
 
-    stuff_category_ids = [i + 1 for i in range(len(stuff_category_names))]
+    stuff_category_ids = [
+        category_name_to_id[stuff_category_name]
+        for stuff_category_name in stuff_category_names
+    ]
 
     unique_inds = np.unique(panoptic_inds_array)
     stuff_annotations = [
