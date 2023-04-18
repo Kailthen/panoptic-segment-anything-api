@@ -3,9 +3,6 @@ import subprocess, os, sys
 result = subprocess.run(["pip", "install", "-e", "GroundingDINO"], check=True)
 print(f"pip install GroundingDINO = {result}")
 
-result = subprocess.run(["pip", "install", "gradio==3.27.0"], check=True)
-print(f"pip install gradio==3.27.0 = {result}")
-
 sys.path.insert(0, "./GroundingDINO")
 
 if not os.path.exists("./sam_vit_h_4b8939.pth"):
@@ -498,12 +495,7 @@ inputs = [
     ),
 ]
 
-outputs = [
-    gr.Image(type="pil", label="Segmentation bitmap"),
-    gr.Textbox(
-        label="Annotations JSON",
-    ),
-]
+outputs = gr.Image(type="pil", label="Segmentation bitmap")
 title = "Panoptic Segment Anything API"
 
 demo_app = gr.Interface(
