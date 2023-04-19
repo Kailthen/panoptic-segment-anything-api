@@ -20,6 +20,7 @@ import argparse
 import random
 import warnings
 import json
+import requests
 
 import gradio as gr
 import numpy as np
@@ -60,6 +61,10 @@ def load_model_hf(model_config_path, repo_id, filename, device):
     _ = model.eval()
     model = model.to(device)
     return model
+
+
+def download_image(url):
+    return Image.open(requests.get(url, stream=True).raw)
 
 
 def load_image_for_dino(image):
@@ -289,7 +294,7 @@ def inds_to_segments_format(
 
 
 def generate_panoptic_mask(
-    image,
+    image_url,
     thing_category_names_string,
     stuff_category_names_string,
     dino_box_threshold=0.3,
@@ -335,6 +340,7 @@ def generate_panoptic_mask(
             category_name: i for i, category_name in enumerate(category_names)
         }
 
+    image = download_image(image_url)
     image = image.convert("RGB")
     image_array = np.asarray(image)
 
@@ -473,7 +479,7 @@ if __name__ == "__main__":
             )
             with gr.Row():
                 with gr.Column():
-                    input_image = gr.Image(source="upload", type="pil")
+                    input_image_url = gr.Textbox(label="Image URL")
                     thing_category_names_string = gr.Textbox(
                         label="Thing categories (i.e. categories with instances), comma-separated",
                         placeholder="E.g. car, bus, person",
@@ -539,33 +545,10 @@ Because of the large dynamic range, these png images may appear black in an imag
                         label="Annotations JSON",
                     )
 
-            examples = gr.Examples(
-                examples=[
-                    [
-                        "a2d2.png",
-                        "car, bus, person",
-                        "road, sky, buildings, sidewalk",
-                    ],
-                    [
-                        "bxl.png",
-                        "car, tram, motorcycle, person",
-                        "road, buildings, sky",
-                    ],
-                ],
-                fn=generate_panoptic_mask,
-                inputs=[
-                    input_image,
-                    thing_category_names_string,
-                    stuff_category_names_string,
-                ],
-                outputs=[segmentation_bitmap, annotations_json],
-                cache_examples=True,
-            )
-
         run_button.click(
             fn=generate_panoptic_mask,
             inputs=[
-                input_image,
+                input_image_url,
                 thing_category_names_string,
                 stuff_category_names_string,
                 box_threshold,
